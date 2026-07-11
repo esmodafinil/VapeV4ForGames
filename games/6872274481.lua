@@ -649,13 +649,17 @@ run(function()
 	local KnitInit, Knit
 	repeat
 		KnitInit, Knit = pcall(function()
-			return debug.getupvalue(require(lplr.PlayerScripts.TS.knit).setup, 9)
+			for i,v in next, debug.getupvalues(require(game.Players.LocalPlayer.PlayerScripts.TS.knit).setup) do
+			    if (type(v) == "table") and (type(v.CreateController) == "function" and type(v.Controllers) == "table") then
+			        return v -- I thik this is knit
+			    end
+			end
 		end)
 		if KnitInit then break end
 		task.wait()
 	until KnitInit
 
-	if not debug.getupvalue(Knit.Start, 1) then
+	if not debug.getupvalue(Knit.Start, 1) then -- I'll fix this or make it better next update
 		repeat task.wait() until debug.getupvalue(Knit.Start, 1)
 	end
 
@@ -728,9 +732,17 @@ run(function()
 			return rawget(self, ind)
 		end
 	})
-
+	local function fetchproto(func)
+	    for p, proto in next, debug.getprotos(func) do
+	        for i, v in next, debug.getconstants(proto) do
+	            if v == "Client" then
+	                return proto
+	            end
+	        end
+	    end
+	end
 	local remoteNames = {
-		AfkStatus = debug.getproto(Knit.Controllers.AfkController.KnitStart, 1),
+		AfkStatus = fetchproto(Knit.Controllers.AfkController.KnitStart), -- Just wanna test to see if it works
 		AttackEntity = Knit.Controllers.SwordController.sendServerRequest,
 		BeePickup = Knit.Controllers.BeeNetController.trigger,
 		CannonAim = debug.getproto(Knit.Controllers.CannonController.startAiming, 5),
